@@ -335,7 +335,9 @@ class Clip {
             foreach ($command['tokens'] as $index => $token) {
                 if ($opt === false && $token['optional'] === true) {
                     $opt = true;
-                } else if ($opt === true && ($token['optional'] === false || $index == (count($command) - 1))) {
+                }
+                
+                if ($opt === true && ($token['optional'] === false || $index == (count($command['tokens']) - 1))) {
                     if ($token['optional'] === true) {
                         $optRegex .= " " . $token['regex'] . "|";
                         $optCount++;
@@ -357,11 +359,15 @@ class Clip {
             
             $regex = substr($regex, 0, -1);
             preg_match("/".$regex."/", $route, $matches);
+            //echo $regex . "\n";
+            //print_r($matches);
             
             if (count($matches) > count($best['matches'])) {
                 $best = array('matches' => array_slice($matches, 1), 'command' => $command);
             }
         }
+        
+        
         
         if ($best !== null) {
             $tokens = $best['command']['tokens'];
