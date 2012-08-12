@@ -1,5 +1,7 @@
 <?php
 
+require_once 'colors.php';
+
 function isWhiteSpace($c) {
     return preg_match('/\s/', $c);
 }
@@ -397,5 +399,32 @@ class Clip {
         
             call_user_func_array($best['command']['callback'], array($args));
         }
+    }
+    
+    public static function println() {
+        $args = func_get_args();
+        echo call_user_func_array('sprintf', $args) . "\n";
+    }
+    
+    public static function bool() {
+        $args = func_get_args();
+        echo call_user_func_array('sprintf', $args) . " [yes/no]\n";
+        $handle = fopen ("php://stdin","r");
+        $line = fgets($handle);
+        if (!in_array(trim($line), array('yes', 'y'))) {
+            return false;
+        }
+        return true;
+    }
+    
+    public static function __callStatic($name, $arguments) {
+        $color = new Colors();
+        $str = "";
+        if (in_array($name, $color->getForegroundColors())) {
+            $str = call_user_func_array('sprintf', $arguments);
+            $str = $color->getColoredString($str, $name);
+        }
+        
+        echo $str . "\n";
     }
 }
