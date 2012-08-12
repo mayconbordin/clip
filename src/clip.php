@@ -398,12 +398,19 @@ class Clip {
             }
         
             call_user_func_array($best['command']['callback'], array($args));
+        } else {
+            echo "Command not found!\n";
         }
     }
     
     public static function println() {
         $args = func_get_args();
         echo call_user_func_array('sprintf', $args) . "\n";
+    }
+    
+    public static function printf() {
+        $args = func_get_args();
+        echo call_user_func_array('sprintf', $args);
     }
     
     public static function bool() {
