@@ -235,70 +235,6 @@ class Lexer {
     }
 }
 
-class RouteParser extends Lexer {
-    public function tokenize() {
-        while ($this->i < $this->length) {
-            if ($this->c === null) {
-                $this->next();
-            }
-        
-            if (isWhiteSpace($this->c)) {
-                //continue;
-            }
-            
-            else if (isArgument($this->c)) {
-                $this->fetchArgument(false);
-            }
-            
-            else if (isDash($this->c)) {
-                $this->next();
-                
-                $double = false;
-                
-                if (isDash($this->c)) {
-                    $double = true;
-                } else {
-                    $this->prev();
-                }
-                
-                $opt = '';
-                while ($this->next() && isOption($this->c)) {
-                    $opt .= $this->c;
-                }
-                
-                if (isEqual($this->c)) {
-                    $var = '';
-                    while ($this->next() && !isWhiteSpace($this->c))
-                        $var .= $this->c;
-                    
-                    if (strlen($var) == 0)
-                        throw new Exception('Invalid option syntax. Values should be all UPPER CASE.');
-                        
-                    $this->addOption($opt, $var, false, $double);
-                } else {
-                    $this->addFlag($opt, false, $double);
-                }
-            } else {
-                $this->fetchStatic();
-            }
-            
-            $this->next();
-        }
-        
-        return $this->tokens;
-    }
-    
-    protected function fetchStatic() {
-        $arg = '';
-        
-        while (isStatic($this->c) && !isWhiteSpace($this->c)) {
-            $arg .= $this->c;
-            $this->next();
-        }
-        $this->addStatic($arg);
-    }
-}
-
 class Arguments {
     public function get($name, $default=null) {
         if (isset($this->$name)) {
@@ -320,65 +256,20 @@ class Clip {
     }
     
     public function run($argv, $argc) {
-        $argv = array_slice($argv, 1);
-        $parse = array();
+        $argv  = array_slice($argv, 1);
         $route = join(" ", $argv);
-        
-        //$parser = new RouteParser($route);
-        //$tokens = $parser->tokenize();
-        
-        $best = null;
-        foreach ($this->commands as $command) {
-            $regex = "";
-            $opt = false;
-            $optRegex = "";
-            $optCount = 0;
-            
-            foreach ($command['tokens'] as $index => $token) {
-                if ($opt === false && $token['optional'] === true) {
-                    $opt = true;
-                }
-                
-                if ($opt === true && ($token['optional'] === false || $index == (count($command['tokens']) - 1))) {
-                    if ($token['optional'] === true) {
-                        $optRegex .= " " . $token['regex'] . "|";
-                        $optCount++;
-                    }
-                
-                    $regex = substr($regex, 0, -1) . str_repeat("(" . $optRegex . ")?", $optCount) . " ";
-                    $opt = false;
-                    $optRegex = "";
-                    $optCount = 0;
-                }
-                
-                if ($opt === false && $token['optional'] === false) {
-                    $regex .= "(" . $token['regex'] . ") ";
-                } else {
-                    $optRegex .= " " . $token['regex'] . "|";
-                    $optCount++;
-                }              
-            }
-            
-            $regex = substr($regex, 0, -1);
-            preg_match("/".$regex."/", $route, $matches);
-            //echo $regex . "\n";
-            //print_r($matches);
-            
-            if (count($matches) > count($best['matches'])) {
-                $best = array('matches' => array_slice($matches, 1), 'command' => $command);
-            }
-        }
-        
-        
+        $best  = $this->match($route);
         
         if ($best !== null) {
             $tokens = $best['command']['tokens'];
 
             $args = new Arguments();
-            foreach ($best['matches'] as $index => $match) {
+            foreach ($best['matches'] as $key => $match) {
                 $value = trim($match);
+                $pos = stripos($key, "_");
                 
-                if (strlen($value) > 0 && $value[0] == "-") {
+                if ($pos !== false && $value !== null && $value != "") {
+                    $key = substr($key, 0, $pos);
                     if (isDoubleDash($value)) {
                         $values = explode("=", $value);
                     } else {
@@ -393,14 +284,66 @@ class Clip {
                         $value = true;
                     }
                     
-                    $args->$name = $value;
+                    $args->$key = $value;
                 }
             }
         
             call_user_func_array($best['command']['callback'], array($args));
         } else {
-            echo "Command not found!\n";
+            self::println("Command not found!");
         }
+    }
+    
+    public function match($route) {
+        $best = null;
+        foreach ($this->commands as $command) {
+            $regex = "";
+            $opt = false;
+            $optRegex = "";
+            $optCount = 0;
+            
+            foreach ($command['tokens'] as $index => $token) {
+                $name = str_replace("-", "", $token['name']);
+                
+                if ($opt === false && $token['optional'] === true) {
+                    $opt = true;
+                }
+                
+                if ($opt === true && ($token['optional'] === false || $index == (count($command['tokens']) - 1))) {
+                    if ($token['optional'] === true) {
+                        $optRegex .= "(?<" . $name . "___NUM__> " . $token['regex'] . ")|";
+                        $optCount++;
+                    }
+                
+                    $regex = substr($regex, 0, -1);// . str_repeat("(" . $optRegex . ")?", $optCount) . " ";
+                    
+                    for ($i=0; $i < $optCount; $i++) {
+                        $regex .= "(" . str_replace("__NUM__", $i, $optRegex) . ")?";
+                    }
+                    
+                    $regex .= " ";
+                    
+                    $opt = false;
+                    $optRegex = "";
+                    $optCount = 0;
+                }
+                
+                if ($opt === false && $token['optional'] === false) {
+                    $regex .= "(?<" . $name . "_>" . $token['regex'] . ") ";
+                } else {
+                    $optRegex .= "(?<" . $name . "___NUM__> " . $token['regex'] . ")|";
+                    $optCount++;
+                }              
+            }
+            
+            $regex = substr($regex, 0, -1);
+            preg_match("/".$regex."/", $route, $matches);
+            
+            if (count($matches) > count($best['matches'])) {
+                $best = array('matches' => array_slice($matches, 1), 'command' => $command);
+            }
+        }
+        return $best;
     }
     
     public static function println() {
