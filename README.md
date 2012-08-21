@@ -17,7 +17,7 @@ And create your commands:
 
 ```php
 $clip->register('createdb -d DATABASE [-h HOST]', function($args) {
-    if (Clip::bool("Create database %s", $args->d)) {
+    if (Clip::bool("Create database %s", $args->get("d"))) {
         Clip::green("done");
     } else {
         Clip::red("skipped");
