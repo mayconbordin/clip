@@ -19,8 +19,8 @@ $clip->register('createdb -d DATABASE [-h HOST]', function($args) {
     }
 });
 
-$clip->register('db dropall -d DATABASE', function($args) {
-    echo "Drop database " . $args->get("d") . "\n";
+$clip->register('db <command> -d DATABASE', function($args) {
+    print_r($args);
 });
 
 $clip->run($argv, $argc);

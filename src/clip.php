@@ -279,9 +279,6 @@ class Clip {
                     if (count($values) == 2) {
                         $name = str_replace("-", "", $values[0]);
                         $value = $values[1];
-                    } else {
-                        $name = str_replace("-", "", $value);
-                        $value = true;
                     }
                     
                     $args->$key = $value;
