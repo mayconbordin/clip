@@ -9,10 +9,7 @@ $clip->register('remote <command> [<name>] [--exclude=PATTERNS] [-f FILE] [--no-
 });
 
 $clip->register('createdb -d DATABASE [-h HOST]', function($args) {
-    Clip::println("hell %s", "yeah");
-    Clip::dark_gray("hell %s", "yeah");
-    
-    if (Clip::bool("Want to do this, dude?")) {
+    if (Clip::bool("Create database %s", $args->d)) {
         Clip::green("done");
     } else {
         Clip::red("skipped");

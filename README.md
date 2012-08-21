@@ -16,6 +16,11 @@ $clip = new Clip();
 And create your commands:
 
 ```php
-require '../src/clip.php';
-$clip = new Clip();
+$clip->register('createdb -d DATABASE [-h HOST]', function($args) {
+    if (Clip::bool("Create database %s", $args->d)) {
+        Clip::green("done");
+    } else {
+        Clip::red("skipped");
+    }
+});
 ```
