@@ -35,6 +35,8 @@ $clip->run($argv);
 
 We implement part of the [docopt](http://docopt.org/) language definition. Support for pipes and ellipsis, for the mutually exclusive and repeating elements, is missing for now.
 
+Examples:
+
 ```bash
 createdb -d <database> [-h <host>] [--debug]
 db <command> -d <database> [--host=<host>]
