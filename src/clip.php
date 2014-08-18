@@ -276,7 +276,7 @@ class Clip
         );
     }
     
-    public function run($argv, $argc)
+    public function run($argv)
     {
         $argv  = array_slice($argv, 1);
         $route = join(" ", $argv);
