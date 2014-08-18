@@ -267,11 +267,11 @@ class Clip
         $lexer = new Lexer($route);
         $tokens = $lexer->tokenize();
         
-        $this->commands[] = array('tokens' => $tokens, 'callback' => $fn);
-        
-        /*echo $route . ":\n";
-        print_r($tokens);
-        echo "=============\n";*/
+        $this->commands[] = array(
+            'tokens'   => $tokens,
+            'callback' => $fn,
+            'route'    => $route
+        );
     }
     
     public function run($argv, $argc)
@@ -301,7 +301,8 @@ class Clip
             
             call_user_func_array($best['command']['callback'], array($args));
         } else {
-            self::println("Command not found!");
+            self::error("Command not found!\n");
+            $this->usage();
         }
     }
     
@@ -362,6 +363,17 @@ class Clip
         }
         
         return $best;
+    }
+    
+    public function usage()
+    {
+        $str = "Usage:\n";
+        
+        foreach ($this->commands as $command) {
+            $str .= "  " . $command['route'] . "\n";
+        }
+        
+        echo $str;
     }
     
     private function associativeTokens($tokens)
