@@ -166,7 +166,9 @@ class Lexer
                     $opt .= $this->c;
                 }
 
-                if (isEqual($this->c) || isArgument($this->input[$this->i+1])) {
+                if (isEqual($this->c) || ($this->i+1 < $this->length 
+                   && isArgument($this->input[$this->i+1]))
+                ) {
                     $this->next();
                     $var = '';
                     
@@ -323,7 +325,8 @@ class Clip
                 }
                 
                 if ($opt === true && ($token['optional'] === false 
-                        || $index == (count($command['tokens']) - 1))) {
+                   || $index == (count($command['tokens']) - 1))
+                ) {
                     if ($token['optional'] === true) {
                         $optRegex .= "(?<" . $name . "___NUM__> "
                                   .  $token['regex'] . ")|";
