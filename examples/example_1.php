@@ -4,19 +4,21 @@ require '../src/clip.php';
 
 $clip = new Clip();
 
-$clip->register('remote <command> [<name>] [--exclude=PATTERNS] [-f FILE] [--no-prompt] [-s] [<anothername>] drop', function($args) {
+$clip->register('remote <command> [<name>] [--exclude=<patterns>] [-f <file>] [--no-prompt] [-s] [<anothername>] drop', function($args) {
     print_r($args);
 });
 
-$clip->register('createdb -d DATABASE [-h HOST]', function($args) {
-    if (Clip::bool("Create database %s", $args->d)) {
-        Clip::green("done");
+$clip->register('createdb -d <database> [-h <host>]', function($args) {
+    if (Clip::bool("Create database %s", $args->database)) {
+        Clip::success("done");
     } else {
-        Clip::red("skipped");
+        Clip::error("skipped");
     }
+    
+    print_r($args);
 });
 
-$clip->register('db <command> -d DATABASE', function($args) {
+$clip->register('db <command> -d <database>', function($args) {
     print_r($args);
 });
 
